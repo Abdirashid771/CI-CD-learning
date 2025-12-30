@@ -1,29 +1,26 @@
-# Stage 1: Build
-FROM python:3.8-slim AS build
 
-WORKDIR /app 
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY hello.py .
-
-# Stage 2: Final image
-FROM python:3.8-slim
+FROM python:3.8.20-slim AS build
 
 WORKDIR /app
 
-# Update critical packages to fix vulnerabilities
-RUN apt-get update && apt-get install -y --only-upgrade libsqlite3-0 && rm -rf /var/lib/apt/lists/*
+COPY requirements.txt .
+RUN pip install  --no-cache-dir -r requirements.txt
 
-# Create non-root user
-RUN groupadd -r app && useradd -r -g app -d /app app
+COPY hello.py .
+
+FROM python:3.8.20-slim
+
+WORKDIR /app
+
+
+RUN groupadd -r app && useradd -r -g app app # Create user 
 USER app
 
-# Copy built packages and app from build stage
+
 COPY --from=build /usr/local/lib/python3.8/site-packages /usr/local/lib/python3.8/site-packages
 COPY --from=build /app/hello.py .
 
-EXPOSE 80
+EXPOSE 8080
 
-CMD ["uvicorn", "hello:app", "--host", "0.0.0.0", "--port", "80"]
+CMD ["uvicorn", "hello:app", "--host", "0.0.0.0", "--port" "80" ]
+
