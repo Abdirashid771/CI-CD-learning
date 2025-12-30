@@ -1,3 +1,13 @@
+# Stage 1: Build
+FROM python:3.8-slim AS build
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY hello.py .
+
 # Stage 2: Final image
 FROM python:3.8-slim
 
@@ -10,6 +20,7 @@ RUN apt-get update && apt-get install -y --only-upgrade libsqlite3-0 && rm -rf /
 RUN groupadd -r app && useradd -r -g app -d /app app
 USER app
 
+# Copy built packages and app from build stage
 COPY --from=build /usr/local/lib/python3.8/site-packages /usr/local/lib/python3.8/site-packages
 COPY --from=build /app/hello.py .
 
